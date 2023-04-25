@@ -1,0 +1,13 @@
+version: '3'
+services:
+  workflow_automator:
+    build:
+      context: .
+      target: 'develop-stage'
+    container_name: workflow_automator
+    environment:
+      MODE: development
+    volumes:
+    - '.:/app'
+    - '/app/node_modules/'
+    
