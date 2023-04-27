@@ -11,4 +11,6 @@ RUN npm install
 
 COPY . .
 
+RUN npm link
+
 CMD ["tail", "-f", "/dev/null"]

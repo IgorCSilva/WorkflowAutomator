@@ -1,8 +1,10 @@
-const { src, dest, parallel } = require('gulp')
-const rename = require('gulp-rename')
-const replace = require('gulp-replace');
+import gulp from 'gulp'
+import rename from 'gulp-rename'
+import replace from 'gulp-replace';
 
-const argv = require('yargs').argv
+import yargs from 'yargs/yargs';
+
+const argv = yargs(process.argv).parseSync();
 
 const NEW_STRUCT_FIELD_MARKER = '# (NEW_STRUCT_FIELD_MARKER)'
 const NEW_TYPE_DEFINITION_FIELD_MARKER = '# (NEW_TYPE_DEFINITION_FIELD_MARKER)'
@@ -63,10 +65,10 @@ function mountFields(fieldsData, conversionFunc) {
   return result
 }
 
-function mountEntity() {
+function mountEntityF() {
   const origin = `${argv.templatePath}/(project)/domain/(entity)/entity/(entity).ex`
   
-  return src(origin)
+  return gulp.src(origin)
     .pipe(replace('{ProjectName}', `${snakeToPascalCase(argv.projectName)}`))
     .pipe(replace('{EntityName}', `${snakeToPascalCase(argv.entityName)}`))
     .pipe(replace('{entity_name}', `${argv.entityName}`))
@@ -76,19 +78,19 @@ function mountEntity() {
     .pipe(rename(function (path) {
       path.basename = argv.entityName
     }))
-    .pipe(dest(`${argv.destinationPath}/${argv.projectName}/domain/${argv.entityName}/entity/`))
+    .pipe(gulp.dest(`${argv.destinationPath}/${argv.projectName}/domain/${argv.entityName}/entity/`))
 }
 
 function mountEntityValidator() {
   const origin = `${argv.templatePath}/(project)/domain/(entity)/validator/(validator).ex`
 
-  return src(origin)
+  return gulp.src(origin)
     .pipe(replace('{ProjectName}', `${snakeToPascalCase(argv.projectName)}`))
     .pipe(replace('{EntityName}', `${snakeToPascalCase(argv.entityName)}`))
     .pipe(rename(function (path) {
       path.basename = argv.entityName + '_ecto_validator'
     }))
-    .pipe(dest(`${argv.destinationPath}/${argv.projectName}/domain/${argv.entityName}/validator/`))
+    .pipe(gulp.dest(`${argv.destinationPath}/${argv.projectName}/domain/${argv.entityName}/validator/`))
 }
 
-exports.mountEntity = parallel(mountEntity, mountEntityValidator)
+export const mountEntity = gulp.parallel(mountEntityF, mountEntityValidator)

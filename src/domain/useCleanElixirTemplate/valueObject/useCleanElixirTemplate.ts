@@ -1,4 +1,4 @@
-import Component from "../../@shared/component/component.abstract";
+import Component from "../../@shared/component/component-abstract";
 import UseTemplateInterface from "../../@shared/useTemplate/useTemplate.interface";
 import NotificationError from "../../@shared/notification/notification.error";
 import UseCleanElixirTemplateValidatorFactory from "../factory/useCleanElixirTemplate.validator.factory";
