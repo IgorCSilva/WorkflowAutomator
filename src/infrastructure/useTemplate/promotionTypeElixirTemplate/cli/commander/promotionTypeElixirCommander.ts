@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 
-import CleanElixirTemplateWorkflowAutomator from '../../automator/gulp/cleanElixirTemplate.automator.gulp';
-import CopyAndFillCleanElixirTemplateUsecase from '../../../../../application/useTemplate/cleanElixirTemplate/copyAndFill.cleanElixirTemplate.usecase';
+import PromotionTypeElixirTemplateWorkflowAutomator from '../../automator/gulp/promotionTypeElixirTemplate.automator.gulp';
+import CopyAndFillPromotionTypeElixirTemplateUsecase from '../../../../../application/useTemplate/promotionTypeElixirTemplate/copyAndFill.promotionTypeElixirTemplate.usecase';
 
 import yargs from 'yargs/yargs';
 const argv = yargs(process.argv).parseSync();
@@ -20,8 +20,8 @@ const execute = async () => {
   }
 
   // Criar automator e passar para o caso de uso.
-  const automator = new CleanElixirTemplateWorkflowAutomator()
-  const cleanElixirCopyAndFillUsecase = new CopyAndFillCleanElixirTemplateUsecase(automator)
+  const automator = new PromotionTypeElixirTemplateWorkflowAutomator()
+  const cleanElixirCopyAndFillUsecase = new CopyAndFillPromotionTypeElixirTemplateUsecase(automator)
 
   try {
     const result = await cleanElixirCopyAndFillUsecase.execute(params)

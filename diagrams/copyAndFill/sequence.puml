@@ -1,0 +1,41 @@
+@startuml copyAndFillSequence
+
+
+
+User -> cli_index as "CLI - Index": Execute command like:\n`template copyAndFill result/output big_car seat "widht integer, height integer"`
+cli_index --> cli_index: Get root container folder path.
+cli_index -> cli_commander as "CLI - Command": Execute commander adapter.
+cli_commander --> cli_commander: Prepare input object data.
+cli_commander --> cli_commander: Create automator infrastructure\ncomponent to be injected.
+cli_commander --> cli_commander: Create usecase with automator injected.
+
+cli_commander -> usecase: Execute usecase.
+usecase --> usecase: Mount entity.
+usecase -> automator: Execute copy and fill function.
+
+automator -> Gulp: Execute automator function.
+
+par Paralell functions
+
+  group MountEntity 
+    Gulp --> Gulp: Get entity file path.
+    Gulp --> Gulp: Replace {ProjectName} marker.
+    Gulp --> Gulp: Replace {EntityName} marker.
+    Gulp --> Gulp: Replace {entity_name} marker.
+    Gulp --> Gulp: Replace marker to add struct\nfields with default values.
+    Gulp --> Gulp: Replace marker to add fields\n with types.
+    Gulp --> Gulp: Replace marker to add fields\n in creation function.
+    Gulp --> Gulp: Rename file to entity_name value.
+    Gulp --> Gulp: Put file in a destination path replacing path markers.
+  end
+
+  group MountEntityValidator 
+    Gulp --> Gulp: Get validator file path.
+    Gulp --> Gulp: Replace {ProjectName} marker.
+    Gulp --> Gulp: Replace {EntityName} marker.
+    Gulp --> Gulp: Rename file.
+    Gulp --> Gulp: Put file in a destination path replacing path markers.
+  end
+end
+
+@enduml

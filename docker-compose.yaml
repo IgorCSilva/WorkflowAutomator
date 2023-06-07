@@ -10,4 +10,5 @@ services:
     volumes:
     - '.:/app'
     - '/app/node_modules/'
+    - '/home/igor/Documents:/app/igor_documents'
     

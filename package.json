@@ -27,9 +27,7 @@
     "yup": "^1.1.1"
   },
   "bin": {
-    "todo": "index.js",
-    "work": "work.js",
-    "template": "src/infrastructure/useTemplate/cleanElixirTemplate/cli/commander/index.js"
+    "template": "src/infrastructure/cli/commander/index.js"
   },
   "type": "module"
 }
