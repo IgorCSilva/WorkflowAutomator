@@ -10,10 +10,8 @@ export default class CopyAndFillCleanElixirTemplateUsecase {
   }
 
   async execute(input: InputCopyAndFillCleanElixirTemplateDTO): Promise<string> {
-    console.log('USECASE: execute', input)
     const component = new UseCleanElixirTemplate(input.destinationPath, input.projectName, input.entityName, input.fields)
 
-    console.log('USECASE', component)
     const result = await this.workflowAutomator.copyAndFill(component)
 
     return result

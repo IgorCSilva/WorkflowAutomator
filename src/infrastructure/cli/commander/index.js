@@ -16,13 +16,6 @@ program
   .command('copyAndFill <destinationPath> <projectName> <entityName> [fields]') // parâmetros obrigatórios entre <> e opcionais entre [].
   .description('Add a todo') // útil quando utilizamos o --help para saber informações sobre o CLI.
   .action((destinationPath, projectName, entityName, fields) => {
-    console.log(destinationPath + ' - destinationPath')
-    console.log(projectName + ' - projectName')
-    console.log(entityName + ' - entityName')
-    console.log(fields + ' - fields')
-    // console.log(__dirname + ' - dirname')
-    console.log(__filename + ' - filename')
-
 
     const rootContainerFolder = process.cwd()
     
@@ -46,12 +39,6 @@ program
   .command('copyAndFillPromotionType <destinationPath> <projectName> <entityName> [fields]') // parâmetros obrigatórios entre <> e opcionais entre [].
   .description('Add a todo') // útil quando utilizamos o --help para saber informações sobre o CLI.
   .action((destinationPath, projectName, entityName, fields) => {
-    console.log(destinationPath + ' - destinationPath new')
-    console.log(projectName + ' - projectName new')
-    console.log(entityName + ' - entityName new')
-    console.log(fields + ' - fields new')
-    // console.log(__dirname + ' - dirname new')
-    console.log(__filename + ' - filename new')
 
 
     const rootContainerFolder = process.cwd()

@@ -69,4 +69,4 @@ Neste momento a pasta dist deve ser criada.
 
 
 ## Comand example
-`template copyAndFill result/output big_car seat "widht integer, height integer"`
+`template copyAndFillPromotionType PromotionsMicroservice promotions file "size integer 13 true, lines integer 4 false"`

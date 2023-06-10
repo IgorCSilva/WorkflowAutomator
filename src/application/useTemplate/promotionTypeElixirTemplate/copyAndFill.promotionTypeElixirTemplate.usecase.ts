@@ -10,10 +10,8 @@ export default class CopyAndFillPromotionTypeElixirTemplateUsecase {
   }
 
   async execute(input: InputCopyAndFillPromotionTypeElixirTemplateDTO): Promise<string> {
-    console.log('USECASE: execute', input)
     const component = new promotionTypeElixirTemplate(input.destinationPath, input.projectName, input.entityName, input.fields)
 
-    console.log('USECASE', component)
     const result = await this.workflowAutomator.copyAndFill(component)
 
     return result
