@@ -11,7 +11,6 @@ const NEW_TYPE_DEFINITION_FIELD_MARKER = '# (NEW_TYPE_DEFINITION_FIELD_MARKER)'
 const NEW_MODULE_FIELD_MARKER = '# (NEW_MODULE_FIELD_MARKER)'
 
 function snakeToPascalCase(str) {
-  console.log(str)
   const splitedString = str.split('_')
   const splitedPascalCase = splitedString.map((name) => {
     return name.charAt(0).toUpperCase() + name.slice(1)
@@ -52,7 +51,6 @@ function fillModuleField(name, type) {
 
 function mountFields(fieldsData, conversionFunc) {
   let fields = fieldsData.split(',')
-  console.log(conversionFunc('string'))
   let splitedField = []
   let result = ''
 

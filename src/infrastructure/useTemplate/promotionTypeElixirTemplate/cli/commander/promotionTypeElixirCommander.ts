@@ -7,11 +7,6 @@ import yargs from 'yargs/yargs';
 const argv = yargs(process.argv).parseSync();
 
 const execute = async () => {
-  console.log(argv.destinationPath + ' - destinationPath')
-  console.log(argv.projectName + ' - projectName')
-  console.log(argv.entityName + ' - entityName')
-  console.log(argv.fields + ' - fields')
-
   const params = {
     destinationPath: <string>argv.destinationPath,
     projectName: <string>argv.projectName,
@@ -25,9 +20,9 @@ const execute = async () => {
 
   try {
     const result = await cleanElixirCopyAndFillUsecase.execute(params)
-    console.log('USECASE RESULT: ', result)
+    console.info('USECASE RESULT: ', result)
   } catch (err) {
-    console.log(err)
+    console.error(err)
   }
 }
 
