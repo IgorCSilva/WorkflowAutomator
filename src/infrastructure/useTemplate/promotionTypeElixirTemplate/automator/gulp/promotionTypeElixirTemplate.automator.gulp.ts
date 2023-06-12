@@ -18,11 +18,11 @@ export default class PromotionTypeElixirTemplateWorkflowAutomator implements Pro
       exec(`cd ${__dirname} && gulp mountEntity --templatePath /${rootContainerFolder}/${component.templatePath} --destinationPath ${component.destinationPath} --projectName ${component.projectName} --entityName ${component.entityName} --fields "${component.fields}"`, async (error: any, stdout: any, stderr: any) => {
         if (error) {
             console.log(`error: ${error.message}`);
-            reject('error')
+            reject(`error: ${error.message}`)
         }
         if (stderr) {
             console.log(`stderr: ${stderr}`);
-            reject('stderr')
+            reject(`stderr: ${stderr}`)
         }
         console.log(`stdout: ${stdout}`);
   

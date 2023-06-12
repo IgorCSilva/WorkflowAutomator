@@ -15,11 +15,19 @@ const NEW_ECTO_VALIDATOR_SCHEMA_FIELD_MARKER = '(NEW_ECTO_VALIDATOR_SCHEMA_FIELD
 const NEW_ECTO_VALIDATOR_CAST_FIELD_MARKER = '(NEW_ECTO_VALIDATOR_CAST_FIELD_MARKER)'
 const NEW_ECTO_VALIDATOR_REQUIRED_FIELD_MARKER = '(NEW_ECTO_VALIDATOR_REQUIRED_FIELD_MARKER)'
 
+const VALID_ATTR_FIELDS_MARKER = '(VALID_ATTR_FIELDS_MARKER)'
+const VALID_FIELD_VALUE_MARKER = '(VALID_FIELD_VALUE_MARKER)'
+const DEFAULT_FIELDS_VALUE_MARKER = '(DEFAULT_FIELDS_VALUE_MARKER)'
+const NIL_FIELDS_MARKER = '(NIL_FIELDS_MARKER)'
+const INLINE_NIL_FIELDS_MARKER = '(INLINE_NIL_FIELDS_MARKER)'
+const INLINE_INVALID_FIELDS_MARKER = '(INLINE_INVALID_FIELDS_MARKER)'
+const NIL_KEYS_FIELDS_MARKER = '(NIL_KEYS_FIELDS_MARKER)'
+const INVALID_FIELDS_VALUES_MARKER = '(INVALID_FIELDS_VALUES_MARKER)'
+
+
 // Editions markers.
-const EDIT_FILE_NEW_FUNCTION_MARKER = '#(NEW_FUNCTION_MARKER)'
-const EDIT_ADD_I_PROMOTION_ALIAS_MARKER = '#(EDIT_ADD_I_PROMOTION_ALIAS_MARKER)'
-const EDIT_ADD_I_PROMOTION_PROMOTION_TYPE_MARKER = '#(EDIT_ADD_I_PROMOTION_PROMOTION_TYPE_MARKER)'
-const EDIT_ADD_I_PROMOTION_RULE_TYPE_MARKER = '#(EDIT_ADD_I_PROMOTION_RULE_TYPE_MARKER)'
+const EDIT_FILE_ADD_BLOCK_MARKER = '#(ADD_BLOCK_MARKER)'
+const EDIT_ADD_INLINE_CONTENT_MARKER = '#(EDIT_ADD_INLINE_CONTENT_MARKER)'
 
 function snakeToPascalCase(str) {
   const splitedString = str.split('_')
@@ -30,7 +38,10 @@ function snakeToPascalCase(str) {
   return pascalCase
 }
 
-function defaulFieldValue(fields) {
+// Function to mount fields with their default values.
+// attr1: default_value1,
+// attr2: default_value2
+function defaulFieldsValue(fields) {
   const types = {
     string: '\"\"',
     integer: 0,
@@ -43,7 +54,19 @@ function defaulFieldValue(fields) {
   return fields.map((field, index) => { return `${field.name}: ${field.default || types[field.type]}${index + 1 == fields.length ? '' : ',\n'}` }).join('')
 }
 
-function ectoValidationFields(fields) {
+// Function to mount a list of attrs using prefix and suffix. Example with prefix data. and suffix .name.
+// data.attr1.name,
+// data.attr2.name
+function listOfFields(fields, key, value, prefix, between, suffix, separator) {
+  return fields
+    .map((field, index) => { return `${prefix}${key ? field[key] : ''}${between}${value ? field[value] : ''}${suffix}${index + 1 == fields.length ? '' : separator}`})
+    .join('')
+}
+
+// Function to mount a list of ecto schema fields.
+// field :attr1, :integer
+// field :attr2, :string
+function ectoSchemaFields(fields) {
   const types = {
     string: 'string',
     integer: 'integer',
@@ -57,20 +80,14 @@ function ectoValidationFields(fields) {
 }
 
 function ectoValidationRequiredFields(fields) {
-
-  let fieldResult = ''
-
-  let result = fields.map((field) => {
-    fieldResult = `${field.required ? ':' + field.name + ', ': ''}`
-    return fieldResult
-  })
-
-  return result
-    .join('')
-    .slice(0, -2);
+  let result = fields.filter((field) => {return field.required})
+  return listOfFields(result, 'name', '', ':', '', ',', ' ')
 }
 
-function fillModuleField(fields) {
+// Function to mount fields with their default values.
+// attr1: attr1,
+// attr2: attr2
+function fillFields(fields) {
   return fields.map((field, index) => { return `${field.name}: ${field.name}${index + 1 == fields.length ? '' : ',\n'}`}).join('')
 }
 
@@ -86,12 +103,18 @@ function prepareFields(fieldsData) {
       name: useSpecifiedDefaulValue(fieldSpecifications[0]) || '',
       type: useSpecifiedDefaulValue(fieldSpecifications[1]) || 'string',
       default: useSpecifiedDefaulValue(fieldSpecifications[2]) || undefined,
-      required: useSpecifiedDefaulValue(fieldSpecifications[3]) === 'true' ? true : false 
+      required: useSpecifiedDefaulValue(fieldSpecifications[3]) === 'true' ? true : false,
+      validValue: useSpecifiedDefaulValue(fieldSpecifications[4]) || '',
+      invalidTypeValue: useSpecifiedDefaulValue(fieldSpecifications[5]) || '',
+      invalidValue: useSpecifiedDefaulValue(fieldSpecifications[6]) || '',
     }
   })
 }
 
-// Task functions. =================================================================
+
+// ================================================================
+// ----------------------- MOUNTING -------------------------------
+// ================================================================
 
 function mountPromotionEntityFile() {
   const origin = `${argv.templatePath}/lib/(project)/domain/(entity)/entity/(entity)_promotion.ex`
@@ -115,9 +138,9 @@ function mountRuleEntityFile() {
     .pipe(replace('{ProjectName}', `${snakeToPascalCase(argv.projectName)}`))
     .pipe(replace('{EntityName}', `${snakeToPascalCase(argv.entityName)}`))
     .pipe(replace('{entity_name}', `${argv.entityName}`))
-    .pipe(replace(NEW_STRUCT_FIELD_MARKER, defaulFieldValue(preparedFields)))
-    .pipe(replace(NEW_CREATE_FUNCTION_ARGS_MARKER, () => { return preparedFields.map((field, index) => { return `${field.name}${index + 1 == preparedFields.length ? '' : ', '}`}).join('')}))
-    .pipe(replace(NEW_MODULE_FIELD_MARKER, fillModuleField(preparedFields)))
+    .pipe(replace(NEW_STRUCT_FIELD_MARKER, defaulFieldsValue(preparedFields)))
+    .pipe(replace(NEW_CREATE_FUNCTION_ARGS_MARKER, listOfFields(preparedFields, 'name', '', '', '', ',', ' ')))
+    .pipe(replace(NEW_MODULE_FIELD_MARKER, fillFields(preparedFields)))
     .pipe(rename(function (path) {
       path.basename = argv.entityName + '_rule'
     }))
@@ -132,7 +155,7 @@ function mountPromotionEntityFactoryFile() {
   return gulp.src(origin)
     .pipe(replace('{ProjectName}', `${snakeToPascalCase(argv.projectName)}`))
     .pipe(replace('{EntityName}', `${snakeToPascalCase(argv.entityName)}`))
-    .pipe(replace(NEW_RULE_ENTITY_FACTORY_FIELD_MARKER, () => { return preparedFields.map((field, index) => { return `rule.${field.name}${index + 1 == preparedFields.length ? '' : ',\n'}`}).join('')}))
+    .pipe(replace(NEW_RULE_ENTITY_FACTORY_FIELD_MARKER, listOfFields(preparedFields, 'name', '', 'rule.', '', '', ',\n')))
     .pipe(rename(function (path) {
       path.basename = argv.entityName + '_factory'
     }))
@@ -183,8 +206,8 @@ function mountRuleEntityEctoValidatorFile() {
   return gulp.src(origin)
     .pipe(replace('{ProjectName}', `${snakeToPascalCase(argv.projectName)}`))
     .pipe(replace('{EntityName}', `${snakeToPascalCase(argv.entityName)}`))
-    .pipe(replace(NEW_ECTO_VALIDATOR_SCHEMA_FIELD_MARKER, ectoValidationFields(preparedFields)))
-    .pipe(replace(NEW_ECTO_VALIDATOR_CAST_FIELD_MARKER, () => { return preparedFields.map((field, index) => { return `:${field.name}${index + 1 == preparedFields.length ? '' : ',\n'}`}).join('')}))
+    .pipe(replace(NEW_ECTO_VALIDATOR_SCHEMA_FIELD_MARKER, ectoSchemaFields(preparedFields)))
+    .pipe(replace(NEW_ECTO_VALIDATOR_CAST_FIELD_MARKER, listOfFields(preparedFields, 'name', '', ':', '', '', ',\n')))
     .pipe(replace(NEW_ECTO_VALIDATOR_REQUIRED_FIELD_MARKER, ectoValidationRequiredFields(preparedFields)))
     .pipe(rename(function (path) {
       path.basename = argv.entityName + '_rule_ecto_validator'
@@ -192,6 +215,46 @@ function mountRuleEntityEctoValidatorFile() {
     .pipe(gulp.dest(`${argv.destinationPath}/lib/${argv.projectName}/domain/${argv.entityName}/validator/`))
 }
 
+function mountRuleEntityTestFile() {
+  const origin = `${argv.templatePath}/test/(project)/domain/(entity)/entity/(entity)_rule_test.exs`
+  
+  let preparedFields = prepareFields(argv.fields)
+
+  return gulp.src(origin)
+    .pipe(replace('{ProjectName}', `${snakeToPascalCase(argv.projectName)}`))
+    .pipe(replace('{EntityName}', `${snakeToPascalCase(argv.entityName)}`))
+    .pipe(replace('{entity_name}', `${argv.entityName}`))
+    .pipe(replace(VALID_ATTR_FIELDS_MARKER, listOfFields(preparedFields, 'name', '', 'ctx.valid_attrs.', '', ',', '\n')))
+    .pipe(replace(VALID_FIELD_VALUE_MARKER, listOfFields(preparedFields, 'name', 'validValue', '', ': ', ',', '\n')))
+    .pipe(replace(NIL_FIELDS_MARKER, listOfFields(preparedFields, '', '', 'nil', '', ',', '\n')))
+    .pipe(replace(DEFAULT_FIELDS_VALUE_MARKER, listOfFields(preparedFields, 'name', 'default', '', ': ', ',', '\n')))
+    .pipe(replace(INLINE_NIL_FIELDS_MARKER, listOfFields(preparedFields, '', '', 'nil', '', ',', ' ')))
+    .pipe(replace(INLINE_INVALID_FIELDS_MARKER, listOfFields(preparedFields, '', 'invalidTypeValue', '', '', ',', ' ')))
+    .pipe(replace(NIL_KEYS_FIELDS_MARKER, listOfFields(preparedFields, 'name', '', '', '', ': nil,', '\n')))
+    .pipe(replace(INVALID_FIELDS_VALUES_MARKER, listOfFields(preparedFields, 'name', 'invalidValue', '', '', ',', '\n')))
+    
+    .pipe(rename(function (path) {
+      path.basename = argv.entityName + '_rule_test'
+    }))
+    .pipe(gulp.dest(`${argv.destinationPath}/test/${argv.projectName}/domain/${argv.entityName}/entity/`))
+}
+
+function mountPromotionEntityTestFile() {
+  const origin = `${argv.templatePath}/test/(project)/domain/(entity)/entity/(entity)_promotion_test.exs`
+
+  return gulp.src(origin)
+    .pipe(replace('{ProjectName}', `${snakeToPascalCase(argv.projectName)}`))
+    .pipe(replace('{EntityName}', `${snakeToPascalCase(argv.entityName)}`))
+    .pipe(replace('{entity_name}', `${argv.entityName}`))
+    .pipe(rename(function (path) {
+      path.basename = argv.entityName + '_promotion_test'
+    }))
+    .pipe(gulp.dest(`${argv.destinationPath}/test/${argv.projectName}/domain/${argv.entityName}/entity/`))
+}
+
+// ================================================================
+// ----------------------- EDITIONS -------------------------------
+// ================================================================
 function getMarkerIndentation(content, marker) {
 
   let indentation = 0
@@ -268,7 +331,15 @@ function getMarkerParameters(content, marker) {
         .slice(1)[0]
         .split(';')
         .reduce((acc, p) => {
-          acc[p.split('=')[0]] = p.split('=')[1]
+          let data = p.split('=')
+          let attr = data[0]
+          let value = data[1]
+          
+          if (['L', 'P'].includes(attr)) {
+            value = Number(value)
+          }
+
+          acc[attr] = value
           return acc
         }, {marker: marker})
   } catch (e) {
@@ -277,90 +348,174 @@ function getMarkerParameters(content, marker) {
   return parameters
 }
 
-function editLine(newContents, newInlineContent, parameters) {
-  let lines = newContents.split('\n')
-  let markerLine = lines
-    .findIndex((line) => {
-      return line.indexOf(parameters.marker) >= 0
-    })
+function editLine(fileContent, newContents, markerSeparator) {
+  
+  const inlineMarker = EDIT_ADD_INLINE_CONTENT_MARKER
+  const blockMarker = EDIT_FILE_ADD_BLOCK_MARKER
+  
+  let lines = fileContent.split('\n')
+  let result = lines
 
-  let lineToEdit = lines[markerLine + Number(parameters.L)]
-  lineToEdit = lineToEdit.slice(0, parameters.P) + newInlineContent + lineToEdit.slice(parameters.P)
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].indexOf(inlineMarker) >= 0) {
+      let parameters = getMarkerParameters(lines[i], inlineMarker)
+      result[i + parameters.L] = (lines[i + parameters.L].slice(0, parameters.P) + newContents[0] + lines[i + parameters.L].slice(parameters.P))
+      newContents = newContents.slice(1)
 
-  lines[markerLine + Number(parameters.L)] = lineToEdit
-  return lines.join('\n')
+    } else if (lines[i].indexOf(blockMarker) >= 0) {
+      let markerIndentation = getMarkerIndentation(lines[i], blockMarker)
+      let minSpaceIndentation = getMinSpaceIndentation(newContents[0])
+      let indentedContent = indentContent(newContents[0], markerIndentation, minSpaceIndentation)
+
+      newContents = newContents.slice(1)
+
+      result[i] = (lines[i].replace(blockMarker, indentedContent + markerSeparator + indent(markerIndentation) + blockMarker))
+    }
+  }
+
+  return result.join('\n')
 }
 
-function addIPromotionTypes() {
-  const origin = `${argv.destinationPath}/lib/${argv.projectName}/domain/promotion/factory/`
-  const file = 'i_promotion_factory.ex'
-
-  return gulp.src(origin + file)
+function editFile(folderPath, filename, modifierFunction) {
+  return gulp.src(folderPath + filename)
     .pipe(
-      modifier((contents, path) => {
-        let pascalEntityName = snakeToPascalCase(argv.entityName)
-        // ADD ALIAS
+      modifier(modifierFunction)
+    )
+    .pipe(gulp.dest(folderPath))
+}
 
-        let newInlineContent = `${pascalEntityName}.Entity.${pascalEntityName}Promotion,
+function editIPromotionFactory() {
+  const folderPath = `${argv.destinationPath}/lib/${argv.projectName}/domain/promotion/factory/`
+  const filename = 'i_promotion_factory.ex'
+
+  const modifierFunction = (contents, path) => {
+    let pascalEntityName = snakeToPascalCase(argv.entityName)
+
+    let newInlineContents = 
+      [
+        `${pascalEntityName}.Entity.${pascalEntityName}Promotion,
     ${pascalEntityName}.Entity.${pascalEntityName}Rule,
-    `
-        let parameters = getMarkerParameters(contents, EDIT_ADD_I_PROMOTION_ALIAS_MARKER)
-        let contentEdited = editLine(contents, newInlineContent, parameters)
+    `,
+        `${pascalEntityName}Promotion | `,
+        `${pascalEntityName}Rule | `
+      ]
 
-        // ADD PROMOTION TYPE
-        newInlineContent = `${pascalEntityName}Promotion | `
-        parameters = getMarkerParameters(contents, EDIT_ADD_I_PROMOTION_PROMOTION_TYPE_MARKER)
-        contentEdited = editLine(contentEdited, newInlineContent, parameters)
+    let contentEdited = editLine(contents, newInlineContents, '\n')
+      
+    return contentEdited
+  }
 
-        // ADD RULE TYPE
-        newInlineContent = `${pascalEntityName}Rule | `
-        parameters = getMarkerParameters(contents, EDIT_ADD_I_PROMOTION_RULE_TYPE_MARKER)
-        contentEdited = editLine(contentEdited, newInlineContent, parameters)
-          
-        return contentEdited
-      })
-    )
-    .pipe(gulp.dest(origin))
+  return editFile(folderPath, filename, modifierFunction)
 }
 
-function addFunctionStorePromotionsEntity() {
-  const origin = `${argv.destinationPath}/lib/${argv.projectName}/domain/store_promotions/entity/`
-  const file = 'store_promotions.ex'
+function editStorePromotionsEntity() {
+  
+  const folderPath = `${argv.destinationPath}/lib/${argv.projectName}/domain/store_promotions/entity/`
+  const filename = 'store_promotions.ex'
 
-  return gulp.src(origin + file)
-    .pipe(
-      modifier((contents, path) => {
+  const modifierFunction = (contents, path) => {
+    let newInlineContents = [
+      `
+      alias ${snakeToPascalCase(argv.projectName)}.Domain.${snakeToPascalCase(argv.entityName)}.Entity.${snakeToPascalCase(argv.entityName)}Promotion`,
+      `
+    @spec set_${argv.entityName}(%__MODULE__{}, ${snakeToPascalCase(argv.entityName)}Promotion.t()) :: %__MODULE__{}
+    def set_${argv.entityName}(store_promotions, ${argv.entityName}), do: %{store_promotions | ${argv.entityName}: ${argv.entityName}}`
+    ]
 
-        // NEW FUNCTION.
-        let newContent = `
-        @spec set_${argv.entityName}(%__MODULE__{}, ${snakeToPascalCase(argv.entityName)}Promotion.t()) :: %__MODULE__{}
-        def set_${argv.entityName}(store_promotions, ${argv.entityName}), do: %{store_promotions | ${argv.entityName}: ${argv.entityName}}
-        `
+    let contentEdited = editLine(contents, newInlineContents, '\n')
+    return contentEdited
+  }
 
-        let markerIndentation = getMarkerIndentation(contents, EDIT_FILE_NEW_FUNCTION_MARKER)
-        let minSpaceIndentation = getMinSpaceIndentation(newContent)
-        let indentedContent = indentContent(newContent, markerIndentation, minSpaceIndentation)
+  return editFile(folderPath, filename, modifierFunction)
+}
 
-        // let newContents = contents
-        let newContents = contents.replace(
-          EDIT_FILE_NEW_FUNCTION_MARKER,
-          indentedContent + '\n' + indent(markerIndentation) + EDIT_FILE_NEW_FUNCTION_MARKER
-        );
+function editStorePromotionsFactory() {
+  
+  const folderPath = `${argv.destinationPath}/lib/${argv.projectName}/domain/store_promotions/factory/`
+  const filename = 'store_promotions_factory.ex'
 
-        return newContents
-      })
-    )
-    .pipe(gulp.dest(origin))
+  const modifierFunction = (contents, path) => {
+    let newInlineContents = [
+      `
+      alias ${snakeToPascalCase(argv.projectName)}.Domain.${snakeToPascalCase(argv.entityName)}.Entity.${snakeToPascalCase(argv.entityName)}Promotion`,
+      `
+      alias ${snakeToPascalCase(argv.projectName)}.Domain.${snakeToPascalCase(argv.entityName)}.Factory.${snakeToPascalCase(argv.entityName)}Factory`,
+      `
+      |> set_promotion(params, :${argv.entityName})`
+    ]
+
+    let contentEdited = editLine(contents, newInlineContents, '\n')
+    return contentEdited
+  }
+
+  return editFile(folderPath, filename, modifierFunction)
+}
+
+function editTestHelper() {
+  
+  const folderPath = `${argv.destinationPath}/test/support/`
+  const filename = 'test_helper.ex'
+
+  const modifierFunction = (contents, path) => {
+
+    let preparedFields = prepareFields(argv.fields)
+
+    let newInlineContents = [
+      `
+      def valid_${argv.entityName}_promotion_attrs do
+        %{
+          id: "ca0f4590-246c-11ed-861d-0242ac120000",
+          active: false,
+          rules: ${argv.entityName}_rules_list(),
+          inserted_at: "3022-10-10T13:24:25Z",
+          updated_at: "3022-10-11T13:24:25Z"
+        }
+      end
+      `,
+      `
+defp ${argv.entityName}_rules_list do
+  [
+    valid_${argv.entityName}_rule_attrs(),
+    %{valid_${argv.entityName}_rule_attrs() |
+      id: "ca0f4590-246c-11ed-861d-0242ac120000",
+      description: "Payment method promotion for Christmas.",
+      min_price_value: 10000,
+      ${listOfFields(preparedFields, 'name', 'validValue', '', ': ', ',', '\n')}
+      apply_to: :specific_products,
+      products_id: ["ca0f4590-246c-11ed-861d-0242ac120000", "ca0f4590-246c-11ed-861d-0242ac120001"],
+      categories_id: [],
+      remaining_quantity: nil,
+      quantity_used: 5,
+      active: true,
+      start_date: "3022-10-10T13:24:25Z",
+      end_date: "3022-10-11T13:24:25Z",
+      inserted_at: "3022-10-10T13:24:25Z",
+      updated_at: "3022-10-11T13:24:25Z"
+    }
+  ]
+end
+`
+    ]
+
+    let contentEdited = editLine(contents, newInlineContents, '\n')
+    return contentEdited
+  }
+
+  return editFile(folderPath, filename, modifierFunction)
 }
 
 export const mountEntity = gulp.parallel(
-  mountPromotionEntityFile,
-  mountRuleEntityFile,
-  mountPromotionEntityFactoryFile,
-  mountPromotionEntityValidatorFactoryFile,
-  mountRuleEntityValidatorFactoryFile,
-  mountPromotionEntityEctoValidatorFile,
-  mountRuleEntityEctoValidatorFile,
-  addIPromotionTypes,
-  addFunctionStorePromotionsEntity
+  // mountPromotionEntityFile,
+  // mountRuleEntityFile,
+  // mountPromotionEntityFactoryFile,
+  // mountPromotionEntityValidatorFactoryFile,
+  // mountRuleEntityValidatorFactoryFile,
+  // mountPromotionEntityEctoValidatorFile,
+  // mountRuleEntityEctoValidatorFile,
+  mountPromotionEntityTestFile,
+  mountRuleEntityTestFile,
+  editTestHelper
+  // editIPromotionFactory,
+  // editStorePromotionsEntity,
+  // editStorePromotionsFactory 
 )
