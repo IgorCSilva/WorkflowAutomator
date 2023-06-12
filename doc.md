@@ -69,4 +69,4 @@ Neste momento a pasta dist deve ser criada.
 
 
 ## Comand example
-`template copyAndFillPromotionType PromotionsMicroservice promotions file "size integer 13 true, lines integer 4 false"`
+`template copyAndFillPromotionType PromotionsMicroservice promotions file "size integer 13 true 10 [] -1, lines integer 4 false 5 [] -1"`

@@ -20,7 +20,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
         {EntityName}Rule.new(
           ctx.valid_attrs.id,
           ctx.valid_attrs.description,
-          MARKER01
+          (VALID_ATTR_FIELDS_MARKER)
           ctx.valid_attrs.apply_to,
           ctx.valid_attrs.products_id,
           ctx.valid_attrs.categories_id,
@@ -37,7 +37,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
       assert %{EntityName}Rule{
         __b__: BPromotionRule,
         description: "Promotion for Carnaval.",
-        MARKER02
+        (VALID_FIELD_VALUE_MARKER)
         apply_to: :specific_categories,
         products_id: [],
         categories_id: ["ba0f4590-246c-11ed-861d-0242ac120000", "ba0f4590-246c-11ed-861d-0242ac120001"],
@@ -56,7 +56,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
       {entity_name} = {EntityName}Rule.new(
         nil,
         nil,
-        MARKER01
+        (NIL_FIELDS_MARKER)
         ctx.valid_attrs.apply_to,
         nil,
         nil,
@@ -73,7 +73,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
       assert %{EntityName}Rule{
         __b__: BPromotionRule,
         description: "",
-        MARKER02
+        (DEFAULT_FIELDS_VALUE_MARKER)
         apply_to: :specific_categories,
         products_id: [],
         categories_id: [],
@@ -89,23 +89,23 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
     end
 
     test "should get error when required params are missing" do
-      result = {EntityName}Rule.new(nil, nil, MARKER03nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+      result = {EntityName}Rule.new(nil, nil, (INLINE_NIL_FIELDS_MARKER) nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
       assert {:error, errors} = result
       assert %{
-        MARKER02
+        (NIL_KEYS_FIELDS_MARKER)
         apply_to: ["can't be blank"],
       } = errors
     end
 
     test "should get error when params are invalid" do
-      result = {EntityName}Rule.new(%{}, %{}, MARKER04%{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{})
+      result = {EntityName}Rule.new(%{}, %{}, (INLINE_INVALID_FIELDS_MARKER) %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{})
 
       assert {:error, errors} = result
       assert %{
         id: ["is invalid"],
         description: ["is invalid"],
-        MARKER02
+        (NIL_KEYS_FIELDS_MARKER)
         apply_to: ["is invalid"],
         products_id: ["is invalid"],
         categories_id: ["is invalid"],
@@ -122,7 +122,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
       result = {EntityName}Rule.new(
         ctx.valid_attrs.id,
         ctx.valid_attrs.description,
-        MARKER01
+        (INVALID_FIELDS_VALUES_MARKER)
         :invalid_apply_to,
         [1,2,3],
         [1,2,3],
@@ -138,7 +138,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
 
       assert {:error, errors} = result
       assert %{
-        MARKER02
+        (NIL_KEYS_FIELDS_MARKER)
         apply_to: ["is invalid"],
         products_id: ["is invalid"],
         categories_id: ["is invalid"],
@@ -155,7 +155,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
         {EntityName}Rule.new(
           ctx.valid_attrs.id,
           ctx.valid_attrs.description,
-          MARKER01
+          (VALID_ATTR_FIELDS_MARKER)
           ctx.valid_attrs.apply_to,
           ctx.valid_attrs.products_id,
           ctx.valid_attrs.categories_id,
@@ -172,7 +172,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
       assert %{EntityName}Rule{
         __b__: BPromotionRule,
         description: "Promotion for Carnaval.",
-        MARKER02
+        (DEFAULT_FIELDS_VALUE_MARKER)
         apply_to: :specific_categories,
         products_id: [],
         categories_id: ["ba0f4590-246c-11ed-861d-0242ac120000", "ba0f4590-246c-11ed-861d-0242ac120001"],
@@ -192,7 +192,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
         {EntityName}Rule.new(
           ctx.valid_attrs.id,
           ctx.valid_attrs.description,
-          MARKER01
+          (VALID_ATTR_FIELDS_MARKER)
           ctx.valid_attrs.apply_to,
           ctx.valid_attrs.products_id,
           ctx.valid_attrs.categories_id,
@@ -209,7 +209,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
       assert %{EntityName}Rule{
         __b__: BPromotionRule,
         description: "Promotion for Carnaval.",
-        MARKER02
+        (DEFAULT_FIELDS_VALUE_MARKER)
         apply_to: :specific_categories,
         products_id: [],
         categories_id: ["ba0f4590-246c-11ed-861d-0242ac120000", "ba0f4590-246c-11ed-861d-0242ac120001"],
@@ -229,7 +229,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
         {EntityName}Rule.new(
           ctx.valid_attrs.id,
           ctx.valid_attrs.description,
-          MARKER01
+          (VALID_ATTR_FIELDS_MARKER)
           ctx.valid_attrs.apply_to,
           ctx.valid_attrs.products_id,
           ctx.valid_attrs.categories_id,
@@ -246,7 +246,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
       assert %{EntityName}Rule{
         __b__: BPromotionRule,
         description: "Promotion for Carnaval.",
-        MARKER02
+        (DEFAULT_FIELDS_VALUE_MARKER)
         apply_to: :specific_categories,
         products_id: [],
         categories_id: ["ba0f4590-246c-11ed-861d-0242ac120000", "ba0f4590-246c-11ed-861d-0242ac120001"],
@@ -266,7 +266,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
         {EntityName}Rule.new(
           ctx.valid_attrs.id,
           ctx.valid_attrs.description,
-          MARKER01
+          (VALID_ATTR_FIELDS_MARKER)
           ctx.valid_attrs.apply_to,
           ctx.valid_attrs.products_id,
           ctx.valid_attrs.categories_id,
@@ -283,7 +283,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
       assert %{EntityName}Rule{
         __b__: BPromotionRule,
         description: "Promotion for Carnaval.",
-        MARKER02
+        (DEFAULT_FIELDS_VALUE_MARKER)
         apply_to: :specific_categories,
         products_id: [],
         categories_id: ["ba0f4590-246c-11ed-861d-0242ac120000", "ba0f4590-246c-11ed-861d-0242ac120001"],
@@ -303,7 +303,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
         {EntityName}Rule.new(
           ctx.valid_attrs.id,
           ctx.valid_attrs.description,
-          MARKER01
+          (VALID_ATTR_FIELDS_MARKER)
           ctx.valid_attrs.apply_to,
           ctx.valid_attrs.products_id,
           ctx.valid_attrs.categories_id,
@@ -329,7 +329,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
       {EntityName}Rule.new(
         ctx.valid_attrs.id,
         ctx.valid_attrs.description,
-        MARKER01
+        (VALID_ATTR_FIELDS_MARKER)
         ctx.valid_attrs.apply_to,
         ctx.valid_attrs.products_id,
         ctx.valid_attrs.categories_id,

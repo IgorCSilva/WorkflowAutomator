@@ -14,7 +14,16 @@ const NEW_RULE_ENTITY_FACTORY_FIELD_MARKER = '(NEW_RULE_ENTITY_FACTORY_FIELD_MAR
 const NEW_ECTO_VALIDATOR_SCHEMA_FIELD_MARKER = '(NEW_ECTO_VALIDATOR_SCHEMA_FIELD_MARKER)'
 const NEW_ECTO_VALIDATOR_CAST_FIELD_MARKER = '(NEW_ECTO_VALIDATOR_CAST_FIELD_MARKER)'
 const NEW_ECTO_VALIDATOR_REQUIRED_FIELD_MARKER = '(NEW_ECTO_VALIDATOR_REQUIRED_FIELD_MARKER)'
-const MARKER= 'MARKER'
+
+const VALID_ATTR_FIELDS_MARKER = '(VALID_ATTR_FIELDS_MARKER)'
+const VALID_FIELD_VALUE_MARKER = '(VALID_FIELD_VALUE_MARKER)'
+const DEFAULT_FIELDS_VALUE_MARKER = '(DEFAULT_FIELDS_VALUE_MARKER)'
+const NIL_FIELDS_MARKER = '(NIL_FIELDS_MARKER)'
+const INLINE_NIL_FIELDS_MARKER = '(INLINE_NIL_FIELDS_MARKER)'
+const INLINE_INVALID_FIELDS_MARKER = '(INLINE_INVALID_FIELDS_MARKER)'
+const NIL_KEYS_FIELDS_MARKER = '(NIL_KEYS_FIELDS_MARKER)'
+const INVALID_FIELDS_VALUES_MARKER = '(INVALID_FIELDS_VALUES_MARKER)'
+
 
 // Editions markers.
 const EDIT_FILE_ADD_BLOCK_MARKER = '#(ADD_BLOCK_MARKER)'
@@ -45,20 +54,12 @@ function defaulFieldsValue(fields) {
   return fields.map((field, index) => { return `${field.name}: ${field.default || types[field.type]}${index + 1 == fields.length ? '' : ',\n'}` }).join('')
 }
 
-// Function to mount functions args.
-// attr1, attr2
-// function sequenceOfArgs(fields, prefix, suffix, separator) {
-//   return fields
-//     .map((field, index) => { return `${prefix}${field.name}${suffix}${index + 1 == fields.length ? '' : separator}`})
-//     .join('')
-// }
-
 // Function to mount a list of attrs using prefix and suffix. Example with prefix data. and suffix .name.
 // data.attr1.name,
 // data.attr2.name
-function listOfFields(fields, prefix, suffix, separator) {
+function listOfFields(fields, key, value, prefix, between, suffix, separator) {
   return fields
-    .map((field, index) => { return `${prefix}${field.name}${suffix}${index + 1 == fields.length ? '' : separator}`})
+    .map((field, index) => { return `${prefix}${key ? field[key] : ''}${between}${value ? field[value] : ''}${suffix}${index + 1 == fields.length ? '' : separator}`})
     .join('')
 }
 
@@ -80,7 +81,7 @@ function ectoSchemaFields(fields) {
 
 function ectoValidationRequiredFields(fields) {
   let result = fields.filter((field) => {return field.required})
-  return listOfFields(result, ':', ',', ' ')
+  return listOfFields(result, 'name', '', ':', '', ',', ' ')
 }
 
 // Function to mount fields with their default values.
@@ -102,7 +103,10 @@ function prepareFields(fieldsData) {
       name: useSpecifiedDefaulValue(fieldSpecifications[0]) || '',
       type: useSpecifiedDefaulValue(fieldSpecifications[1]) || 'string',
       default: useSpecifiedDefaulValue(fieldSpecifications[2]) || undefined,
-      required: useSpecifiedDefaulValue(fieldSpecifications[3]) === 'true' ? true : false 
+      required: useSpecifiedDefaulValue(fieldSpecifications[3]) === 'true' ? true : false,
+      validValue: useSpecifiedDefaulValue(fieldSpecifications[4]) || '',
+      invalidTypeValue: useSpecifiedDefaulValue(fieldSpecifications[5]) || '',
+      invalidValue: useSpecifiedDefaulValue(fieldSpecifications[6]) || '',
     }
   })
 }
@@ -135,7 +139,7 @@ function mountRuleEntityFile() {
     .pipe(replace('{EntityName}', `${snakeToPascalCase(argv.entityName)}`))
     .pipe(replace('{entity_name}', `${argv.entityName}`))
     .pipe(replace(NEW_STRUCT_FIELD_MARKER, defaulFieldsValue(preparedFields)))
-    .pipe(replace(NEW_CREATE_FUNCTION_ARGS_MARKER, listOfFields(preparedFields, '', ',', ' ')))
+    .pipe(replace(NEW_CREATE_FUNCTION_ARGS_MARKER, listOfFields(preparedFields, 'name', '', '', '', ',', ' ')))
     .pipe(replace(NEW_MODULE_FIELD_MARKER, fillFields(preparedFields)))
     .pipe(rename(function (path) {
       path.basename = argv.entityName + '_rule'
@@ -151,7 +155,7 @@ function mountPromotionEntityFactoryFile() {
   return gulp.src(origin)
     .pipe(replace('{ProjectName}', `${snakeToPascalCase(argv.projectName)}`))
     .pipe(replace('{EntityName}', `${snakeToPascalCase(argv.entityName)}`))
-    .pipe(replace(NEW_RULE_ENTITY_FACTORY_FIELD_MARKER, listOfFields(preparedFields, 'rule.', '', ',\n')))
+    .pipe(replace(NEW_RULE_ENTITY_FACTORY_FIELD_MARKER, listOfFields(preparedFields, 'name', '', 'rule.', '', '', ',\n')))
     .pipe(rename(function (path) {
       path.basename = argv.entityName + '_factory'
     }))
@@ -203,7 +207,7 @@ function mountRuleEntityEctoValidatorFile() {
     .pipe(replace('{ProjectName}', `${snakeToPascalCase(argv.projectName)}`))
     .pipe(replace('{EntityName}', `${snakeToPascalCase(argv.entityName)}`))
     .pipe(replace(NEW_ECTO_VALIDATOR_SCHEMA_FIELD_MARKER, ectoSchemaFields(preparedFields)))
-    .pipe(replace(NEW_ECTO_VALIDATOR_CAST_FIELD_MARKER, listOfFields(preparedFields, ':', '', ',\n')))
+    .pipe(replace(NEW_ECTO_VALIDATOR_CAST_FIELD_MARKER, listOfFields(preparedFields, 'name', '', ':', '', '', ',\n')))
     .pipe(replace(NEW_ECTO_VALIDATOR_REQUIRED_FIELD_MARKER, ectoValidationRequiredFields(preparedFields)))
     .pipe(rename(function (path) {
       path.basename = argv.entityName + '_rule_ecto_validator'
@@ -220,10 +224,15 @@ function mountRuleEntityTestFile() {
     .pipe(replace('{ProjectName}', `${snakeToPascalCase(argv.projectName)}`))
     .pipe(replace('{EntityName}', `${snakeToPascalCase(argv.entityName)}`))
     .pipe(replace('{entity_name}', `${argv.entityName}`))
-    .pipe(replace(MARKER + '01', listOfFields(preparedFields, 'ctx.valid_attrs.', ',', '\n')))
-    .pipe(replace(MARKER + '02', listOfFields(preparedFields, '', ': nil,', '\n')))
-    .pipe(replace(MARKER + '03', ('nil, ').repeat(preparedFields.length)))
-    .pipe(replace(MARKER + '04', ('%{}, ').repeat(preparedFields.length)))
+    .pipe(replace(VALID_ATTR_FIELDS_MARKER, listOfFields(preparedFields, 'name', '', 'ctx.valid_attrs.', '', ',', '\n')))
+    .pipe(replace(VALID_FIELD_VALUE_MARKER, listOfFields(preparedFields, 'name', 'validValue', '', ': ', ',', '\n')))
+    .pipe(replace(NIL_FIELDS_MARKER, listOfFields(preparedFields, '', '', 'nil', '', ',', '\n')))
+    .pipe(replace(DEFAULT_FIELDS_VALUE_MARKER, listOfFields(preparedFields, 'name', 'default', '', ': ', ',', '\n')))
+    .pipe(replace(INLINE_NIL_FIELDS_MARKER, listOfFields(preparedFields, '', '', 'nil', '', ',', ' ')))
+    .pipe(replace(INLINE_INVALID_FIELDS_MARKER, listOfFields(preparedFields, '', 'invalidTypeValue', '', '', ',', ' ')))
+    .pipe(replace(NIL_KEYS_FIELDS_MARKER, listOfFields(preparedFields, 'name', '', '', '', ': nil,', '\n')))
+    .pipe(replace(INVALID_FIELDS_VALUES_MARKER, listOfFields(preparedFields, 'name', 'invalidValue', '', '', ',', '\n')))
+    
     .pipe(rename(function (path) {
       path.basename = argv.entityName + '_rule_test'
     }))
@@ -447,7 +456,6 @@ function editTestHelper() {
   const folderPath = `${argv.destinationPath}/test/support/`
   const filename = 'test_helper.ex'
 
-  
   const modifierFunction = (contents, path) => {
 
     let preparedFields = prepareFields(argv.fields)
@@ -472,7 +480,7 @@ defp ${argv.entityName}_rules_list do
       id: "ca0f4590-246c-11ed-861d-0242ac120000",
       description: "Payment method promotion for Christmas.",
       min_price_value: 10000,
-      ${listOfFields(preparedFields, '', ': ###,', '\n')}
+      ${listOfFields(preparedFields, 'name', 'validValue', '', ': ', ',', '\n')}
       apply_to: :specific_products,
       products_id: ["ca0f4590-246c-11ed-861d-0242ac120000", "ca0f4590-246c-11ed-861d-0242ac120001"],
       categories_id: [],
