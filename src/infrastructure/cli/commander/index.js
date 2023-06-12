@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 
 // Using cli package.
-import { Command } from 'commander'
+import { Command, Argument } from 'commander'
 const program = new Command()
 import { exec } from 'child_process'
 
@@ -36,10 +36,17 @@ program
   })
 
 program
-  .command('copyAndFillPromotionType <destinationPath> <projectName> <entityName> [fields]') // parâmetros obrigatórios entre <> e opcionais entre [].
-  .description('Add a todo') // útil quando utilizamos o --help para saber informações sobre o CLI.
-  .action((destinationPath, projectName, entityName, fields) => {
+  .name('add-promotion-type')
+  .version('1.0.0')
+  .command('copyAndFillPromotionType') // parâmetros obrigatórios entre <> e opcionais entre [].
+  .description('Add a new promotion type.\nAll needed files to implement a new promotion type are created and some files in the project folder is updated too.') // útil quando utilizamos o --help para saber informações sobre o CLI.
+  .argument('<destinationPath>', 'Destination path where created files will be saved.')
+  .argument('<projectName>', 'Name of the project.')
+  .argument('<entityName>', 'Promotion type name.')
+  .argument('[fields]', 'New promotion type fields.')
+  // .addArgument(new Argument('<drink-size>', 'drink cup size').choices(['small', 'medium', 'large']))
 
+  .action((destinationPath, projectName, entityName, fields) => {
 
     const rootContainerFolder = process.cwd()
     
@@ -58,4 +65,6 @@ program
     });
 
   })
+
+
 program.parse(process.argv)
