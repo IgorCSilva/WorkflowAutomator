@@ -80,6 +80,7 @@ function ectoSchemaFields(fields) {
 }
 
 function ectoValidationRequiredFields(fields) {
+  
   let result = fields.filter((field) => {return field.required})
   return listOfFields(result, 'name', '', ':', '', ',', ' ')
 }
@@ -88,7 +89,7 @@ function ectoValidationRequiredFields(fields) {
 // attr1: attr1,
 // attr2: attr2
 function fillFields(fields) {
-  return fields.map((field, index) => { return `${field.name}: ${field.name}${index + 1 == fields.length ? '' : ',\n'}`}).join('')
+  return fields.map((field, index) => { return `${field.name}: ${field.name} || %__MODULE__{}.${field.name}${index + 1 == fields.length ? '' : ',\n'}`}).join('')
 }
 
 function useSpecifiedDefaulValue(value) {
@@ -96,17 +97,18 @@ function useSpecifiedDefaulValue(value) {
 }
 
 function prepareFields(fieldsData) {
-  let fields = fieldsData.split(',')
+  let fields = JSON.parse(fieldsData)
+  
   return fields.map(field => {
-    let fieldSpecifications = field.trim().split(' ')
     return {
-      name: useSpecifiedDefaulValue(fieldSpecifications[0]) || '',
-      type: useSpecifiedDefaulValue(fieldSpecifications[1]) || 'string',
-      default: useSpecifiedDefaulValue(fieldSpecifications[2]) || undefined,
-      required: useSpecifiedDefaulValue(fieldSpecifications[3]) === 'true' ? true : false,
-      validValue: useSpecifiedDefaulValue(fieldSpecifications[4]) || '',
-      invalidTypeValue: useSpecifiedDefaulValue(fieldSpecifications[5]) || '',
-      invalidValue: useSpecifiedDefaulValue(fieldSpecifications[6]) || '',
+      name: useSpecifiedDefaulValue(field.name) || '',
+      type: useSpecifiedDefaulValue(field.type) || 'string',
+      default: useSpecifiedDefaulValue(field.default) || undefined,
+      required: useSpecifiedDefaulValue(field.required) === 'true' ? true : false,
+      validValue: useSpecifiedDefaulValue(field.validValue) || '',
+      diffRuleValidValue: useSpecifiedDefaulValue(field.diffRuleValidValue) || '',
+      invalidTypeValue: useSpecifiedDefaulValue(field.invalidTypeValue) || '',
+      invalidValue: useSpecifiedDefaulValue(field.invalidValue) || '',
     }
   })
 }
@@ -231,7 +233,7 @@ function mountRuleEntityTestFile() {
     .pipe(replace(INLINE_NIL_FIELDS_MARKER, listOfFields(preparedFields, '', '', 'nil', '', ',', ' ')))
     .pipe(replace(INLINE_INVALID_FIELDS_MARKER, listOfFields(preparedFields, '', 'invalidTypeValue', '', '', ',', ' ')))
     .pipe(replace(NIL_KEYS_FIELDS_MARKER, listOfFields(preparedFields, 'name', '', '', '', ': nil,', '\n')))
-    .pipe(replace(INVALID_FIELDS_VALUES_MARKER, listOfFields(preparedFields, 'name', 'invalidValue', '', '', ',', '\n')))
+    .pipe(replace(INVALID_FIELDS_VALUES_MARKER, listOfFields(preparedFields, '', 'invalidValue', '', '', ',', '\n')))
     
     .pipe(rename(function (path) {
       path.basename = argv.entityName + '_rule_test'
@@ -480,7 +482,7 @@ defp ${argv.entityName}_rules_list do
       id: "ca0f4590-246c-11ed-861d-0242ac120000",
       description: "Payment method promotion for Christmas.",
       min_price_value: 10000,
-      ${listOfFields(preparedFields, 'name', 'validValue', '', ': ', ',', '\n')}
+      ${listOfFields(preparedFields, 'name', 'diffRuleValidValue', '', ': ', ',', '\n')}
       apply_to: :specific_products,
       products_id: ["ca0f4590-246c-11ed-861d-0242ac120000", "ca0f4590-246c-11ed-861d-0242ac120001"],
       categories_id: [],
@@ -494,6 +496,26 @@ defp ${argv.entityName}_rules_list do
     }
   ]
 end
+`,
+      `
+def valid_${argv.entityName}_rule_attrs do
+  %{
+    id: "ba0f4590-246c-11ed-861d-0242ac120001",
+    description: "Promotion for Carnaval.",
+    min_price_value: 10000,
+    ${listOfFields(preparedFields, 'name', 'validValue', '', ': ', ',', '\n')}
+    apply_to: :specific_categories,
+    products_id: [],
+    categories_id: ["ba0f4590-246c-11ed-861d-0242ac120000", "ba0f4590-246c-11ed-861d-0242ac120001"],
+    remaining_quantity: 10,
+    quantity_used: 0,
+    active: true,
+    start_date: "3022-10-10T13:24:25Z",
+    end_date: "3022-10-11T13:24:25Z",
+    inserted_at: "3022-10-10T13:24:25Z",
+    updated_at: "3022-10-11T13:24:25Z"
+  }
+end
 `
     ]
 
@@ -505,17 +527,17 @@ end
 }
 
 export const mountEntity = gulp.parallel(
-  // mountPromotionEntityFile,
-  // mountRuleEntityFile,
-  // mountPromotionEntityFactoryFile,
-  // mountPromotionEntityValidatorFactoryFile,
-  // mountRuleEntityValidatorFactoryFile,
-  // mountPromotionEntityEctoValidatorFile,
-  // mountRuleEntityEctoValidatorFile,
+  mountPromotionEntityFile,
+  mountRuleEntityFile,
+  mountPromotionEntityFactoryFile,
+  mountPromotionEntityValidatorFactoryFile,
+  mountRuleEntityValidatorFactoryFile,
+  mountPromotionEntityEctoValidatorFile,
+  mountRuleEntityEctoValidatorFile,
   mountPromotionEntityTestFile,
   mountRuleEntityTestFile,
-  editTestHelper
-  // editIPromotionFactory,
-  // editStorePromotionsEntity,
-  // editStorePromotionsFactory 
+  editTestHelper,
+  editIPromotionFactory,
+  editStorePromotionsEntity,
+  editStorePromotionsFactory 
 )
