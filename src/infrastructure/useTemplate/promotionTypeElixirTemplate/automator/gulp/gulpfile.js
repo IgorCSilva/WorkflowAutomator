@@ -73,7 +73,7 @@ function ectoSchemaFields(fields) {
     boolean: 'boolean',
     list: 'to be defined',
     object: 'to be defined',
-    atom: 'atom'
+    atom: 'string'
   }
 
   return fields.map((field, index) => {return `field :${field.name}, :${types[field.type]}${index + 1 == fields.length ? '' : '\n'}`}).join('')
@@ -97,8 +97,19 @@ function useSpecifiedDefaulValue(value) {
 
 function prepareFields(fieldsData) {
   let fields = JSON.parse(fieldsData)
+  let parseStringMarkers = fields.map((v) => {
+    let parsed = v
+
+    for (let key in parsed) {
+      if (typeof parsed[key] === 'string') {
+        parsed[key] = parsed[key].replace(/_dq_/g, '"').replace(/_sq_/g, "'").replace(/_cq_/g, "`")
+      }
+    }
+
+    return parsed
+  })
   
-  return fields.map(field => {
+  return parseStringMarkers.map(field => {
     return {
       name: useSpecifiedDefaulValue(field.name) || '',
       type: useSpecifiedDefaulValue(field.type) || 'string',
@@ -420,7 +431,8 @@ function editStorePromotionsEntity() {
       alias ${snakeToPascalCase(argv.projectName)}.Domain.${snakeToPascalCase(argv.entityName)}.Entity.${snakeToPascalCase(argv.entityName)}Promotion`,
       `
     @spec set_${argv.entityName}(%__MODULE__{}, ${snakeToPascalCase(argv.entityName)}Promotion.t()) :: %__MODULE__{}
-    def set_${argv.entityName}(store_promotions, ${argv.entityName}), do: %{store_promotions | ${argv.entityName}: ${argv.entityName}}`
+    def set_${argv.entityName}(store_promotions, ${argv.entityName}), do: %{store_promotions | ${argv.entityName}: ${argv.entityName}}
+`
     ]
 
     let contentEdited = editLine(contents, newInlineContents, '\n')

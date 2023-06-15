@@ -27,10 +27,6 @@ const createCLI = (commandsCreator, answerGrouper) => {
       {
         name: 'boolean',
         value: 'boolean'
-      },
-      {
-        name: 'atom',
-        value: 'atom'
       }
     ]
     
@@ -58,7 +54,10 @@ const createCLI = (commandsCreator, answerGrouper) => {
 
     const rootContainerFolder = process.cwd()
 
-    const encodedFields = JSON.stringify(fields).replace(/"/g, "\\\"\"")
+    const encodedFields = JSON
+        .stringify(fields)
+        .replace(/"/g, "double_quote")
+        .replace(/'/g, "single_quote")
 
     exec(`npx ts-node ${rootContainerFolder}/src/infrastructure/useTemplate/promotionTypeElixirTemplate/cli/commander/promotionTypeElixirCommander.ts --destinationPath /${rootContainerFolder}/${destinationPath} --projectName promotions --entityName ${entityName} --fields ${encodedFields}`, (error, stdout, stderr) => {
       if (error) {
