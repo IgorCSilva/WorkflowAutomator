@@ -80,9 +80,8 @@ function ectoSchemaFields(fields) {
 }
 
 function ectoValidationRequiredFields(fields) {
-  
   let result = fields.filter((field) => {return field.required})
-  return listOfFields(result, 'name', '', ':', '', ',', ' ')
+  return listOfFields(result, 'name', '', ':', '', '', ', ')
 }
 
 // Function to mount fields with their default values.
@@ -104,7 +103,7 @@ function prepareFields(fieldsData) {
       name: useSpecifiedDefaulValue(field.name) || '',
       type: useSpecifiedDefaulValue(field.type) || 'string',
       default: useSpecifiedDefaulValue(field.default) || undefined,
-      required: useSpecifiedDefaulValue(field.required) === 'true' ? true : false,
+      required: useSpecifiedDefaulValue(field.required),
       validValue: useSpecifiedDefaulValue(field.validValue) || '',
       diffRuleValidValue: useSpecifiedDefaulValue(field.diffRuleValidValue) || '',
       invalidTypeValue: useSpecifiedDefaulValue(field.invalidTypeValue) || '',

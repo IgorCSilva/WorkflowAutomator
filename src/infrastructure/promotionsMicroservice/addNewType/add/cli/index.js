@@ -42,12 +42,12 @@ const createCLI = (commandsCreator, answerGrouper) => {
       field = {}
       field.name = await answerGrouper.ask('What is the field name?')
       field.type = await answerGrouper.uniqueOption('Select the field type:', options)
-      field.invalidTypeValue = await answerGrouper.ask('Now type any value with invalid type:', options)
       field.default = await answerGrouper.ask('Type a default value:')
-      field.required = await answerGrouper.createConfirm('Is this field required?')
       field.validValue = await answerGrouper.ask('Type any valid value (how about a different value from defaul?):')
       field.diffRuleValidValue = await answerGrouper.ask('Type any valid value to a different rule:')
-      field.invalidValue = await answerGrouper.ask('Now type any invalid value:')
+      field.invalidValue = await answerGrouper.ask('Now type any invalid value wiht correct type:')
+      field.required = await answerGrouper.createConfirm('Is this field required?')
+      field.invalidTypeValue = await answerGrouper.ask('Type any value with different type:')
       
       fields.push(field)
 
