@@ -23,6 +23,8 @@ const INLINE_NIL_FIELDS_MARKER = '(INLINE_NIL_FIELDS_MARKER)'
 const INLINE_INVALID_FIELDS_MARKER = '(INLINE_INVALID_FIELDS_MARKER)'
 const NIL_KEYS_FIELDS_MARKER = '(NIL_KEYS_FIELDS_MARKER)'
 const INVALID_FIELDS_VALUES_MARKER = '(INVALID_FIELDS_VALUES_MARKER)'
+const INVALID_VALIDATION_KEYS_FIELDS_MARKER = '(INVALID_VALIDATION_KEYS_FIELDS_MARKER)'
+const MISSING_VALIDATION_KEYS_FIELDS_MARKER = '(MISSING_VALIDATION_KEYS_FIELDS_MARKER)'
 
 
 // Editions markers.
@@ -77,6 +79,24 @@ function ectoSchemaFields(fields) {
   }
 
   return fields.map((field, index) => {return `field :${field.name}, :${types[field.type]}${index + 1 == fields.length ? '' : '\n'}`}).join('')
+}
+
+function validationResponse(validator, type) {
+  let result = 'nil'
+  let validationData = {
+    ecto: {
+      invalid: '["is invalid"]',
+      missing: '["can\'t be blank"]'
+    }
+  }
+
+  try {
+    result = validationData[validator][type]
+  } catch (e) {
+    console.warn(`Response validator not found: validator = ${validator}; type = ${type}`)
+  }
+
+  return result
 }
 
 function ectoValidationRequiredFields(fields) {
@@ -242,7 +262,8 @@ function mountRuleEntityTestFile() {
     .pipe(replace(DEFAULT_FIELDS_VALUE_MARKER, listOfFields(preparedFields, 'name', 'default', '', ': ', ',', '\n')))
     .pipe(replace(INLINE_NIL_FIELDS_MARKER, listOfFields(preparedFields, '', '', 'nil', '', ',', ' ')))
     .pipe(replace(INLINE_INVALID_FIELDS_MARKER, listOfFields(preparedFields, '', 'invalidTypeValue', '', '', ',', ' ')))
-    .pipe(replace(NIL_KEYS_FIELDS_MARKER, listOfFields(preparedFields, 'name', '', '', '', ': nil,', '\n')))
+    .pipe(replace(INVALID_VALIDATION_KEYS_FIELDS_MARKER, listOfFields(preparedFields, 'name', '', '', '', `: ${validationResponse('ecto', 'invalid')},`, '\n')))
+    .pipe(replace(MISSING_VALIDATION_KEYS_FIELDS_MARKER, listOfFields(preparedFields, 'name', '', '', '', `: ${validationResponse('ecto', 'missing')},`, '\n')))
     .pipe(replace(INVALID_FIELDS_VALUES_MARKER, listOfFields(preparedFields, '', 'invalidValue', '', '', ',', '\n')))
     
     .pipe(rename(function (path) {
@@ -347,8 +368,8 @@ function getMarkerParameters(content, marker) {
           let attr = data[0]
           let value = data[1]
           
-          if (['L', 'P'].includes(attr)) {
-            value = Number(value)
+          if (['U', 'L', 'P'].includes(attr)) {
+            value = (value === 'end') ? Infinity : Number(value)
           }
 
           acc[attr] = value
@@ -371,7 +392,9 @@ function editLine(fileContent, newContents, markerSeparator) {
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].indexOf(inlineMarker) >= 0) {
       let parameters = getMarkerParameters(lines[i], inlineMarker)
-      result[i + parameters.L] = (lines[i + parameters.L].slice(0, parameters.P) + newContents[0] + lines[i + parameters.L].slice(parameters.P))
+      let index = -parameters.U || parameters.L
+
+      result[i + index] = (lines[i + index].slice(0, parameters.P) + newContents[0] + lines[i + index].slice(parameters.P))
       newContents = newContents.slice(1)
 
     } else if (lines[i].indexOf(blockMarker) >= 0) {
@@ -537,6 +560,78 @@ end
   return editFile(folderPath, filename, modifierFunction)
 }
 
+function editReadme() {
+  
+  const folderPath = `${argv.destinationPath}/`
+  const filename = 'README.md'
+
+  const modifierFunction = (contents, path) => {
+    let newInlineContents = [
+      `,
+  "${argv.entityName}": promotion`
+    ]
+
+    let contentEdited = editLine(contents, newInlineContents, '\n')
+    return contentEdited
+  }
+
+  return editFile(folderPath, filename, modifierFunction)
+}
+
+
+// Swagger
+
+function editSwaggerApiFile() {
+  
+  const folderPath = `/app/Swagger/doc/promotions/`
+  const filename = 'api.yaml'
+
+  const modifierFunction = (contents, path) => {
+    let text = argv.entityName.replace(/_/g, ' ')
+    let newInlineContents = [
+      `
+      - name: ${text} rules
+        description: Manipulate rules data.
+      - name: ${text} promotions
+        description: Manipulate promotion data.
+`,
+`
+${argv.entityName}:
+$ref: './schemas/${argv.entityName}/${argv.entityName}.yaml'
+
+${argv.entityName}_rule_data:
+$ref: './schemas/${argv.entityName}/${argv.entityName}_rule_data.yaml'
+
+${argv.entityName}_rule:
+$ref: './schemas/${argv.entityName}/${argv.entityName}_rule.yaml'
+`
+    ]
+
+    let contentEdited = editLine(contents, newInlineContents, '\n')
+    return contentEdited
+  }
+
+  return editFile(folderPath, filename, modifierFunction)
+}
+
+function editStoresPromotionsSchemaFile() {
+  
+  const folderPath = `/app/Swagger/doc/promotions/schemas/`
+  const filename = 'store_promotions.yaml'
+
+  const modifierFunction = (contents, path) => {
+    let newInlineContents = [
+      `${argv.entityName}:
+        $ref: './${argv.entityName}/${argv.entityName}.yaml'`
+    ]
+
+    let contentEdited = editLine(contents, newInlineContents, '\n')
+    return contentEdited
+  }
+
+  return editFile(folderPath, filename, modifierFunction)
+}
+
 export const mountEntity = gulp.parallel(
   mountPromotionEntityFile,
   mountRuleEntityFile,
@@ -550,5 +645,8 @@ export const mountEntity = gulp.parallel(
   editTestHelper,
   editIPromotionFactory,
   editStorePromotionsEntity,
-  editStorePromotionsFactory 
+  editStorePromotionsFactory,
+  editReadme,
+  editSwaggerApiFile,
+  editStoresPromotionsSchemaFile
 )
