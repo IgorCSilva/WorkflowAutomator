@@ -14,7 +14,6 @@ const __dirname = path.dirname(__filename);
 export default class CleanElixirTemplateWorkflowAutomator implements CleanElixirTemplateWorkflowAutomatorInterface {
 
   async copyAndFill(component: UseCleanElixirTemplate): Promise<string> {
-    console.log('AUTOMATOR', component)
     return new Promise<string>((resolve, reject) => {
       exec(`cd ${__dirname} && gulp mountEntity --templatePath /${rootContainerFolder}/${component.templatePath} --destinationPath ${component.destinationPath} --projectName ${component.projectName} --entityName ${component.entityName} --fields "${component.fields}"`, async (error: any, stdout: any, stderr: any) => {
         if (error) {

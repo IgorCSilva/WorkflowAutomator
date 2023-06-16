@@ -69,4 +69,28 @@ Neste momento a pasta dist deve ser criada.
 
 
 ## Comand example
-`template copyAndFill result/output big_car seat "widht integer, height integer"`
+`template addNewPromotionType`
+
+## Metrics
+Pessoas normais digitam entre 240 a 360 caracteres por minuto.
+Profissionais digitam entre 420 a 540 caracteres por minuto.
+Experts digitam em torno de 720 caracteres por minuto.
+
+---
+Metade do total de caracteres em arquivos criados:
+
+A pessoa normal mais rápido demoraria 25 minutos;
+O profissional mais rápido demoraria 16 minutos;
+O expert demoraria 12 minutos;
+
+Com automação: 2 minutos respondendo as perguntas + 5 segundos executando a tarefa + (tempo para ajustes no código...)
+
+
+## Funções deste serviço
+- Implementar nova funcionalidade
+  - no serviço de promoções
+    - adicionar novo tipo de promoção.
+    - adicionar campo em arquivo base.
+- Criar criar arquivos de mensageria
+  - implementar produtor e/ou consumidor
+- 

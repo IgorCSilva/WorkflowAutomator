@@ -23,13 +23,17 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "commander": "^2.19.0",
+    "@inquirer/confirm": "^2.0.2",
+    "@inquirer/prompts": "^2.1.1",
+    "@inquirer/select": "^1.2.1",
+    "@types/inquirer": "^9.0.3",
+    "commander": "^10.0.1",
+    "gulp-modifier": "^1.0.1",
+    "yargs": "^17.7.2",
     "yup": "^1.1.1"
   },
   "bin": {
-    "todo": "index.js",
-    "work": "work.js",
-    "template": "src/infrastructure/useTemplate/cleanElixirTemplate/cli/commander/index.js"
+    "template": "src/infrastructure/cli/index.js"
   },
   "type": "module"
 }

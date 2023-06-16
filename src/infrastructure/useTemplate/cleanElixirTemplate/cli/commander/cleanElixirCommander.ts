@@ -7,11 +7,6 @@ import yargs from 'yargs/yargs';
 const argv = yargs(process.argv).parseSync();
 
 const execute = async () => {
-  console.log(argv.destinationPath + ' - destinationPath')
-  console.log(argv.projectName + ' - projectName')
-  console.log(argv.entityName + ' - entityName')
-  console.log(argv.fields + ' - fields')
-
   const params = {
     destinationPath: <string>argv.destinationPath,
     projectName: <string>argv.projectName,
@@ -19,19 +14,15 @@ const execute = async () => {
     fields: <string>argv.fields
   }
 
-  const automator = new CleanElixirTemplateWorkflowAutomator()
-  console.log('AUTOMATOR:', automator)
-
   // Criar automator e passar para o caso de uso.
+  const automator = new CleanElixirTemplateWorkflowAutomator()
   const cleanElixirCopyAndFillUsecase = new CopyAndFillCleanElixirTemplateUsecase(automator)
-  console.log('USECASE: ', cleanElixirCopyAndFillUsecase)
 
-  console.log('USECASE RESULT: start')
   try {
     const result = await cleanElixirCopyAndFillUsecase.execute(params)
-    console.log('USECASE RESULT: ', result)
+    console.info('USECASE RESULT: ', result)
   } catch (err) {
-    console.log(err)
+    console.error(err)
   }
 }
 
