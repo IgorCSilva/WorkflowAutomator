@@ -621,7 +621,8 @@ function editStoresPromotionsSchemaFile() {
 
   const modifierFunction = (contents, path) => {
     let newInlineContents = [
-      `${argv.entityName}:
+      `
+      ${argv.entityName}:
         $ref: './${argv.entityName}/${argv.entityName}.yaml'`
     ]
 
