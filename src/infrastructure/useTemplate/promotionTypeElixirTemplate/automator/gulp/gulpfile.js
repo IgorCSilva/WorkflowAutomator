@@ -23,6 +23,8 @@ const INLINE_NIL_FIELDS_MARKER = '(INLINE_NIL_FIELDS_MARKER)'
 const INLINE_INVALID_FIELDS_MARKER = '(INLINE_INVALID_FIELDS_MARKER)'
 const NIL_KEYS_FIELDS_MARKER = '(NIL_KEYS_FIELDS_MARKER)'
 const INVALID_FIELDS_VALUES_MARKER = '(INVALID_FIELDS_VALUES_MARKER)'
+const INVALID_VALIDATION_KEYS_FIELDS_MARKER = '(INVALID_VALIDATION_KEYS_FIELDS_MARKER)'
+const MISSING_VALIDATION_KEYS_FIELDS_MARKER = '(MISSING_VALIDATION_KEYS_FIELDS_MARKER)'
 
 
 // Editions markers.
@@ -73,22 +75,40 @@ function ectoSchemaFields(fields) {
     boolean: 'boolean',
     list: 'to be defined',
     object: 'to be defined',
-    atom: 'atom'
+    atom: 'string'
   }
 
   return fields.map((field, index) => {return `field :${field.name}, :${types[field.type]}${index + 1 == fields.length ? '' : '\n'}`}).join('')
 }
 
+function validationResponse(validator, type) {
+  let result = 'nil'
+  let validationData = {
+    ecto: {
+      invalid: '["is invalid"]',
+      missing: '["can\'t be blank"]'
+    }
+  }
+
+  try {
+    result = validationData[validator][type]
+  } catch (e) {
+    console.warn(`Response validator not found: validator = ${validator}; type = ${type}`)
+  }
+
+  return result
+}
+
 function ectoValidationRequiredFields(fields) {
   let result = fields.filter((field) => {return field.required})
-  return listOfFields(result, 'name', '', ':', '', ',', ' ')
+  return listOfFields(result, 'name', '', ':', '', '', ', ')
 }
 
 // Function to mount fields with their default values.
 // attr1: attr1,
 // attr2: attr2
 function fillFields(fields) {
-  return fields.map((field, index) => { return `${field.name}: ${field.name}${index + 1 == fields.length ? '' : ',\n'}`}).join('')
+  return fields.map((field, index) => { return `${field.name}: ${field.name} || %__MODULE__{}.${field.name}${index + 1 == fields.length ? '' : ',\n'}`}).join('')
 }
 
 function useSpecifiedDefaulValue(value) {
@@ -96,17 +116,29 @@ function useSpecifiedDefaulValue(value) {
 }
 
 function prepareFields(fieldsData) {
-  let fields = fieldsData.split(',')
-  return fields.map(field => {
-    let fieldSpecifications = field.trim().split(' ')
+  let fields = JSON.parse(fieldsData)
+  let parseStringMarkers = fields.map((v) => {
+    let parsed = v
+
+    for (let key in parsed) {
+      if (typeof parsed[key] === 'string') {
+        parsed[key] = parsed[key].replace(/_dq_/g, '"').replace(/_sq_/g, "'").replace(/_cq_/g, "`")
+      }
+    }
+
+    return parsed
+  })
+  
+  return parseStringMarkers.map(field => {
     return {
-      name: useSpecifiedDefaulValue(fieldSpecifications[0]) || '',
-      type: useSpecifiedDefaulValue(fieldSpecifications[1]) || 'string',
-      default: useSpecifiedDefaulValue(fieldSpecifications[2]) || undefined,
-      required: useSpecifiedDefaulValue(fieldSpecifications[3]) === 'true' ? true : false,
-      validValue: useSpecifiedDefaulValue(fieldSpecifications[4]) || '',
-      invalidTypeValue: useSpecifiedDefaulValue(fieldSpecifications[5]) || '',
-      invalidValue: useSpecifiedDefaulValue(fieldSpecifications[6]) || '',
+      name: useSpecifiedDefaulValue(field.name) || '',
+      type: useSpecifiedDefaulValue(field.type) || 'string',
+      default: useSpecifiedDefaulValue(field.default) || undefined,
+      required: useSpecifiedDefaulValue(field.required),
+      validValue: useSpecifiedDefaulValue(field.validValue) || '',
+      diffRuleValidValue: useSpecifiedDefaulValue(field.diffRuleValidValue) || '',
+      invalidTypeValue: useSpecifiedDefaulValue(field.invalidTypeValue) || '',
+      invalidValue: useSpecifiedDefaulValue(field.invalidValue) || '',
     }
   })
 }
@@ -230,8 +262,9 @@ function mountRuleEntityTestFile() {
     .pipe(replace(DEFAULT_FIELDS_VALUE_MARKER, listOfFields(preparedFields, 'name', 'default', '', ': ', ',', '\n')))
     .pipe(replace(INLINE_NIL_FIELDS_MARKER, listOfFields(preparedFields, '', '', 'nil', '', ',', ' ')))
     .pipe(replace(INLINE_INVALID_FIELDS_MARKER, listOfFields(preparedFields, '', 'invalidTypeValue', '', '', ',', ' ')))
-    .pipe(replace(NIL_KEYS_FIELDS_MARKER, listOfFields(preparedFields, 'name', '', '', '', ': nil,', '\n')))
-    .pipe(replace(INVALID_FIELDS_VALUES_MARKER, listOfFields(preparedFields, 'name', 'invalidValue', '', '', ',', '\n')))
+    .pipe(replace(INVALID_VALIDATION_KEYS_FIELDS_MARKER, listOfFields(preparedFields, 'name', '', '', '', `: ${validationResponse('ecto', 'invalid')},`, '\n')))
+    .pipe(replace(MISSING_VALIDATION_KEYS_FIELDS_MARKER, listOfFields(preparedFields, 'name', '', '', '', `: ${validationResponse('ecto', 'missing')},`, '\n')))
+    .pipe(replace(INVALID_FIELDS_VALUES_MARKER, listOfFields(preparedFields, '', 'invalidValue', '', '', ',', '\n')))
     
     .pipe(rename(function (path) {
       path.basename = argv.entityName + '_rule_test'
@@ -335,8 +368,8 @@ function getMarkerParameters(content, marker) {
           let attr = data[0]
           let value = data[1]
           
-          if (['L', 'P'].includes(attr)) {
-            value = Number(value)
+          if (['U', 'L', 'P'].includes(attr)) {
+            value = (value === 'end') ? Infinity : Number(value)
           }
 
           acc[attr] = value
@@ -359,7 +392,9 @@ function editLine(fileContent, newContents, markerSeparator) {
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].indexOf(inlineMarker) >= 0) {
       let parameters = getMarkerParameters(lines[i], inlineMarker)
-      result[i + parameters.L] = (lines[i + parameters.L].slice(0, parameters.P) + newContents[0] + lines[i + parameters.L].slice(parameters.P))
+      let index = -parameters.U || parameters.L
+
+      result[i + index] = (lines[i + index].slice(0, parameters.P) + newContents[0] + lines[i + index].slice(parameters.P))
       newContents = newContents.slice(1)
 
     } else if (lines[i].indexOf(blockMarker) >= 0) {
@@ -419,7 +454,8 @@ function editStorePromotionsEntity() {
       alias ${snakeToPascalCase(argv.projectName)}.Domain.${snakeToPascalCase(argv.entityName)}.Entity.${snakeToPascalCase(argv.entityName)}Promotion`,
       `
     @spec set_${argv.entityName}(%__MODULE__{}, ${snakeToPascalCase(argv.entityName)}Promotion.t()) :: %__MODULE__{}
-    def set_${argv.entityName}(store_promotions, ${argv.entityName}), do: %{store_promotions | ${argv.entityName}: ${argv.entityName}}`
+    def set_${argv.entityName}(store_promotions, ${argv.entityName}), do: %{store_promotions | ${argv.entityName}: ${argv.entityName}}
+`
     ]
 
     let contentEdited = editLine(contents, newInlineContents, '\n')
@@ -480,7 +516,7 @@ defp ${argv.entityName}_rules_list do
       id: "ca0f4590-246c-11ed-861d-0242ac120000",
       description: "Payment method promotion for Christmas.",
       min_price_value: 10000,
-      ${listOfFields(preparedFields, 'name', 'validValue', '', ': ', ',', '\n')}
+      ${listOfFields(preparedFields, 'name', 'diffRuleValidValue', '', ': ', ',', '\n')}
       apply_to: :specific_products,
       products_id: ["ca0f4590-246c-11ed-861d-0242ac120000", "ca0f4590-246c-11ed-861d-0242ac120001"],
       categories_id: [],
@@ -494,6 +530,26 @@ defp ${argv.entityName}_rules_list do
     }
   ]
 end
+`,
+      `
+def valid_${argv.entityName}_rule_attrs do
+  %{
+    id: "ba0f4590-246c-11ed-861d-0242ac120001",
+    description: "Promotion for Carnaval.",
+    min_price_value: 10000,
+    ${listOfFields(preparedFields, 'name', 'validValue', '', ': ', ',', '\n')}
+    apply_to: :specific_categories,
+    products_id: [],
+    categories_id: ["ba0f4590-246c-11ed-861d-0242ac120000", "ba0f4590-246c-11ed-861d-0242ac120001"],
+    remaining_quantity: 10,
+    quantity_used: 0,
+    active: true,
+    start_date: "3022-10-10T13:24:25Z",
+    end_date: "3022-10-11T13:24:25Z",
+    inserted_at: "3022-10-10T13:24:25Z",
+    updated_at: "3022-10-11T13:24:25Z"
+  }
+end
 `
     ]
 
@@ -504,18 +560,93 @@ end
   return editFile(folderPath, filename, modifierFunction)
 }
 
+function editReadme() {
+  
+  const folderPath = `${argv.destinationPath}/`
+  const filename = 'README.md'
+
+  const modifierFunction = (contents, path) => {
+    let newInlineContents = [
+      `,
+  "${argv.entityName}": promotion`
+    ]
+
+    let contentEdited = editLine(contents, newInlineContents, '\n')
+    return contentEdited
+  }
+
+  return editFile(folderPath, filename, modifierFunction)
+}
+
+
+// Swagger
+
+function editSwaggerApiFile() {
+  
+  const folderPath = `/app/Swagger/doc/promotions/`
+  const filename = 'api.yaml'
+
+  const modifierFunction = (contents, path) => {
+    let text = argv.entityName.replace(/_/g, ' ')
+    let newInlineContents = [
+      `
+      - name: ${text} rules
+        description: Manipulate rules data.
+      - name: ${text} promotions
+        description: Manipulate promotion data.
+`,
+`
+${argv.entityName}:
+$ref: './schemas/${argv.entityName}/${argv.entityName}.yaml'
+
+${argv.entityName}_rule_data:
+$ref: './schemas/${argv.entityName}/${argv.entityName}_rule_data.yaml'
+
+${argv.entityName}_rule:
+$ref: './schemas/${argv.entityName}/${argv.entityName}_rule.yaml'
+`
+    ]
+
+    let contentEdited = editLine(contents, newInlineContents, '\n')
+    return contentEdited
+  }
+
+  return editFile(folderPath, filename, modifierFunction)
+}
+
+function editStoresPromotionsSchemaFile() {
+  
+  const folderPath = `/app/Swagger/doc/promotions/schemas/`
+  const filename = 'store_promotions.yaml'
+
+  const modifierFunction = (contents, path) => {
+    let newInlineContents = [
+      `${argv.entityName}:
+        $ref: './${argv.entityName}/${argv.entityName}.yaml'`
+    ]
+
+    let contentEdited = editLine(contents, newInlineContents, '\n')
+    return contentEdited
+  }
+
+  return editFile(folderPath, filename, modifierFunction)
+}
+
 export const mountEntity = gulp.parallel(
-  // mountPromotionEntityFile,
-  // mountRuleEntityFile,
-  // mountPromotionEntityFactoryFile,
-  // mountPromotionEntityValidatorFactoryFile,
-  // mountRuleEntityValidatorFactoryFile,
-  // mountPromotionEntityEctoValidatorFile,
-  // mountRuleEntityEctoValidatorFile,
+  mountPromotionEntityFile,
+  mountRuleEntityFile,
+  mountPromotionEntityFactoryFile,
+  mountPromotionEntityValidatorFactoryFile,
+  mountRuleEntityValidatorFactoryFile,
+  mountPromotionEntityEctoValidatorFile,
+  mountRuleEntityEctoValidatorFile,
   mountPromotionEntityTestFile,
   mountRuleEntityTestFile,
-  editTestHelper
-  // editIPromotionFactory,
-  // editStorePromotionsEntity,
-  // editStorePromotionsFactory 
+  editTestHelper,
+  editIPromotionFactory,
+  editStorePromotionsEntity,
+  editStorePromotionsFactory,
+  editReadme,
+  editSwaggerApiFile,
+  editStoresPromotionsSchemaFile
 )

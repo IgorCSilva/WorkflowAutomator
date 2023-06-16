@@ -16,7 +16,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}Rule do
     {EntityName}.Factory.{EntityName}RuleValidatorFactory
   }
 
-  def new(id, description, (NEW_CREATE_FUNCTION_ARGS_MARKER), apply_to, products_id, categories_id, remaining_quantity, quantity_used, active, min_price_value, start_date, end_date, inserted_at, updated_at) do
+  def new(id, description, (NEW_CREATE_FUNCTION_ARGS_MARKER) apply_to, products_id, categories_id, remaining_quantity, quantity_used, active, min_price_value, start_date, end_date, inserted_at, updated_at) do
     base_data = %__MODULE__{}.new.(%__MODULE__{}, id, description, apply_to, products_id, categories_id, remaining_quantity, quantity_used, active, min_price_value, start_date, end_date, inserted_at, updated_at)
 
     {entity_name}_rule = %__MODULE__{

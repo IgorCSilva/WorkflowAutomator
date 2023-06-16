@@ -14,8 +14,11 @@ const __dirname = path.dirname(__filename);
 export default class PromotionTypeElixirTemplateWorkflowAutomator implements PromotionTypeElixirTemplateWorkflowAutomatorInterface {
 
   async copyAndFill(component: PromotionTypeElixirTemplate): Promise<string> {
+
+    let fields = (component.fields).replace(/double_quote/g, '"').replace(/single_quote/g, "'").replace(/"/g, "\\\"")
+
     return new Promise<string>((resolve, reject) => {
-      exec(`cd ${__dirname} && gulp mountEntity --templatePath /${rootContainerFolder}/${component.templatePath} --destinationPath ${component.destinationPath} --projectName ${component.projectName} --entityName ${component.entityName} --fields "${component.fields}"`, async (error: any, stdout: any, stderr: any) => {
+      exec(`cd ${__dirname} && gulp mountEntity --templatePath /${rootContainerFolder}/${component.templatePath} --destinationPath ${component.destinationPath} --projectName ${component.projectName} --entityName ${component.entityName} --fields ${fields}`, async (error: any, stdout: any, stderr: any) => {
         if (error) {
             console.log(`error: ${error.message}`);
             reject(`error: ${error.message}`)

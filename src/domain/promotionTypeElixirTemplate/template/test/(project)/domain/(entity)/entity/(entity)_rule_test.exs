@@ -89,23 +89,23 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
     end
 
     test "should get error when required params are missing" do
-      result = {EntityName}Rule.new(nil, nil, (INLINE_NIL_FIELDS_MARKER) nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+      result = {EntityName}Rule.new(nil, nil, (INLINE_NIL_FIELDS_MARKER) nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
       assert {:error, errors} = result
       assert %{
-        (NIL_KEYS_FIELDS_MARKER)
+        (MISSING_VALIDATION_KEYS_FIELDS_MARKER)
         apply_to: ["can't be blank"],
       } = errors
     end
 
     test "should get error when params are invalid" do
-      result = {EntityName}Rule.new(%{}, %{}, (INLINE_INVALID_FIELDS_MARKER) %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{})
+      result = {EntityName}Rule.new(%{}, %{}, (INLINE_INVALID_FIELDS_MARKER) %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{}, %{})
 
       assert {:error, errors} = result
       assert %{
         id: ["is invalid"],
         description: ["is invalid"],
-        (NIL_KEYS_FIELDS_MARKER)
+        (INVALID_VALIDATION_KEYS_FIELDS_MARKER)
         apply_to: ["is invalid"],
         products_id: ["is invalid"],
         categories_id: ["is invalid"],
@@ -138,7 +138,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
 
       assert {:error, errors} = result
       assert %{
-        (NIL_KEYS_FIELDS_MARKER)
+        (INVALID_VALIDATION_KEYS_FIELDS_MARKER)
         apply_to: ["is invalid"],
         products_id: ["is invalid"],
         categories_id: ["is invalid"],
@@ -172,7 +172,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
       assert %{EntityName}Rule{
         __b__: BPromotionRule,
         description: "Promotion for Carnaval.",
-        (DEFAULT_FIELDS_VALUE_MARKER)
+        (VALID_FIELD_VALUE_MARKER)
         apply_to: :specific_categories,
         products_id: [],
         categories_id: ["ba0f4590-246c-11ed-861d-0242ac120000", "ba0f4590-246c-11ed-861d-0242ac120001"],
@@ -209,7 +209,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
       assert %{EntityName}Rule{
         __b__: BPromotionRule,
         description: "Promotion for Carnaval.",
-        (DEFAULT_FIELDS_VALUE_MARKER)
+        (VALID_FIELD_VALUE_MARKER)
         apply_to: :specific_categories,
         products_id: [],
         categories_id: ["ba0f4590-246c-11ed-861d-0242ac120000", "ba0f4590-246c-11ed-861d-0242ac120001"],
@@ -246,7 +246,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
       assert %{EntityName}Rule{
         __b__: BPromotionRule,
         description: "Promotion for Carnaval.",
-        (DEFAULT_FIELDS_VALUE_MARKER)
+        (VALID_FIELD_VALUE_MARKER)
         apply_to: :specific_categories,
         products_id: [],
         categories_id: ["ba0f4590-246c-11ed-861d-0242ac120000", "ba0f4590-246c-11ed-861d-0242ac120001"],
@@ -283,7 +283,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
       assert %{EntityName}Rule{
         __b__: BPromotionRule,
         description: "Promotion for Carnaval.",
-        (DEFAULT_FIELDS_VALUE_MARKER)
+        (VALID_FIELD_VALUE_MARKER)
         apply_to: :specific_categories,
         products_id: [],
         categories_id: ["ba0f4590-246c-11ed-861d-0242ac120000", "ba0f4590-246c-11ed-861d-0242ac120001"],

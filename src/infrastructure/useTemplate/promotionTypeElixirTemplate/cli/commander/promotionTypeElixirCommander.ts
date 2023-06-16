@@ -4,7 +4,7 @@ import PromotionTypeElixirTemplateWorkflowAutomator from '../../automator/gulp/p
 import CopyAndFillPromotionTypeElixirTemplateUsecase from '../../../../../application/useTemplate/promotionTypeElixirTemplate/copyAndFill.promotionTypeElixirTemplate.usecase';
 
 import yargs from 'yargs/yargs';
-const argv = yargs(process.argv).parseSync();
+const argv = yargs(process.argv).argv;
 
 const execute = async () => {
   const params = {
