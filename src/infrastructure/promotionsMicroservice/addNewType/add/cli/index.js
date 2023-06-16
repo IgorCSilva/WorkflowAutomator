@@ -27,10 +27,6 @@ const createCLI = (commandsCreator, answerGrouper) => {
       {
         name: 'boolean',
         value: 'boolean'
-      },
-      {
-        name: 'atom',
-        value: 'atom'
       }
     ]
     
@@ -45,7 +41,7 @@ const createCLI = (commandsCreator, answerGrouper) => {
       field.default = await answerGrouper.ask('Type a default value:')
       field.validValue = await answerGrouper.ask('Type any valid value (how about a different value from defaul?):')
       field.diffRuleValidValue = await answerGrouper.ask('Type any valid value to a different rule:')
-      field.invalidValue = await answerGrouper.ask('Now type any invalid value wiht correct type:')
+      field.invalidValue = await answerGrouper.ask('Now type any invalid value with correct type:')
       field.required = await answerGrouper.createConfirm('Is this field required?')
       field.invalidTypeValue = await answerGrouper.ask('Type any value with different type:')
       
@@ -58,7 +54,10 @@ const createCLI = (commandsCreator, answerGrouper) => {
 
     const rootContainerFolder = process.cwd()
 
-    const encodedFields = JSON.stringify(fields).replace(/"/g, "\\\"\"")
+    const encodedFields = JSON
+        .stringify(fields)
+        .replace(/"/g, "double_quote")
+        .replace(/'/g, "single_quote")
 
     exec(`npx ts-node ${rootContainerFolder}/src/infrastructure/useTemplate/promotionTypeElixirTemplate/cli/commander/promotionTypeElixirCommander.ts --destinationPath /${rootContainerFolder}/${destinationPath} --projectName promotions --entityName ${entityName} --fields ${encodedFields}`, (error, stdout, stderr) => {
       if (error) {

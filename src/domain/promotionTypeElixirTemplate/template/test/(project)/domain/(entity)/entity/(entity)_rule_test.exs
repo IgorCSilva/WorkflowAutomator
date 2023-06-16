@@ -93,7 +93,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
 
       assert {:error, errors} = result
       assert %{
-        (NIL_KEYS_FIELDS_MARKER)
+        (MISSING_VALIDATION_KEYS_FIELDS_MARKER)
         apply_to: ["can't be blank"],
       } = errors
     end
@@ -105,7 +105,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
       assert %{
         id: ["is invalid"],
         description: ["is invalid"],
-        (NIL_KEYS_FIELDS_MARKER)
+        (INVALID_VALIDATION_KEYS_FIELDS_MARKER)
         apply_to: ["is invalid"],
         products_id: ["is invalid"],
         categories_id: ["is invalid"],
@@ -138,7 +138,7 @@ defmodule {ProjectName}.Domain.{EntityName}.Entity.{EntityName}RuleTest do
 
       assert {:error, errors} = result
       assert %{
-        (NIL_KEYS_FIELDS_MARKER)
+        (INVALID_VALIDATION_KEYS_FIELDS_MARKER)
         apply_to: ["is invalid"],
         products_id: ["is invalid"],
         categories_id: ["is invalid"],
